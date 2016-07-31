@@ -1,0 +1,16 @@
+# If you only have one Primary or one Worker enter it for each entry below
+# File locations need to use / not \
+# Hour difference of 6 is Central US
+{postgres database}workgroup
+{postgres username}readonly
+{postgres password}
+{postgres port}8060
+{Tableau Server Worker 1}SERVERNAME
+{Tableau Server Worker 2}SERVERNAME
+{Tableau Server Worker 3}SERVERNAME
+{Tableau Server Worker 4}SERVERNAME
+{GMT or UTC hour difference}6
+{Connection attempts}10
+{Seconds to wait to retry}5
+{Local File Location}C:/Python32/output_files/
+{Shared Drive File Location}//SHARED/DRIVE/LOCATION/
