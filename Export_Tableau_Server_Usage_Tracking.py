@@ -1,6 +1,23 @@
+# Copyright (C) 02/29/2016, Luke Brady, Cerner Corporation
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, 
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Joins used from:
+# http://onlinehelp.tableau.com/current/server/en-us/help.htm#data_dictionary.html
+#
 def write_postgres_table(rows,filename,delimeter,header,write_header=True):
     """
-    Write out the content
+    Write out the result rows of a query.  The output file is overwritten.
     """
     from os import getcwd
     import datetime
@@ -10,17 +27,17 @@ def write_postgres_table(rows,filename,delimeter,header,write_header=True):
     for x in range(len(rows)):
         temp = ''
         for y in range(len(rows[x])):
-            ###temp += str(rows[x][y]) + delimeter
-            #string
+            # These type checks allow the rows to be written out as strings.
+            # string
             if(type('') == type(rows[x][y])):
                 temp += rows[x][y] + delimeter
-            #datetime
+            # datetime
             elif(type(datetime.datetime.now()) == type(rows[x][y])):
                 temp += str(rows[x][y]) + delimeter
-            #integer
+            # integer
             elif(type(0) == type(rows[x][y])):
                 temp += str(rows[x][y]) + delimeter
-            #None
+            # None
             elif(type(None) == type(rows[x][y])):
                 temp += delimeter
             else:
@@ -30,7 +47,7 @@ def write_postgres_table(rows,filename,delimeter,header,write_header=True):
 
 def append_postgres_table(rows,filename,delimeter):
     """
-    Append content
+    Write out the result rows of a query.  Append the output to a file.
     """
     from os import getcwd
     import datetime
@@ -38,22 +55,22 @@ def append_postgres_table(rows,filename,delimeter):
     for x in range(len(rows)):
         temp = ''
         for y in range(len(rows[x])):
-            ###temp += str(rows[x][y]) + delimeter
-            #string
+            # These type checks allow the rows to be written out as strings.
+            # string
             if(type('') == type(rows[x][y])):
                 temp += rows[x][y] + delimeter
-            #datetime
+            # datetime
             elif(type(datetime.datetime.now()) == type(rows[x][y])):
                 temp += str(rows[x][y]) + delimeter
-            #integer
+            # integer
             elif(type(0) == type(rows[x][y])):
                 temp += str(rows[x][y]) + delimeter
-            #None
+            # None
             elif(type(None) == type(rows[x][y])):
                 temp += delimeter
             else:
                 temp += delimeter
-        #the [:-1] here removes the last delimeter which we do not want
+        # the [:-1] here removes the last delimeter which we do not want
         outfile.write(temp[:-1] + '\n')
     outfile.close()
 
@@ -80,11 +97,18 @@ def get_all_rows_from_postgres_table(details,attempts,wait_to_retry,trim_results
         try_connection += " host="+details[counter % len(details)].host+" password="+details[counter % len(details)].password
         try_connection += " port="+details[counter % len(details)].port+""
         try:
+            # Try to connect and execute the query
             conn = psycopg2.connect(try_connection)
             cur = conn.cursor()
             cur.execute('SELECT * from '+details[counter % len(details)].table)
+
+            # Get all the results
             rows = cur.fetchall()
+            
+            # Close the connection
             cur.close()
+            
+            # If we make it this far we've made a successful connection
             connected = True
             outfile = open(getcwd()+'\\output_files\\Tableau_Server_Usage_Backup_Log.txt','a')
             outfile.write(str(datetime.datetime.now())+'|Successfully connected to: '+details[counter % len(details)].host+'|Attempt ')
@@ -133,11 +157,18 @@ def execute_query_from_postgres_table(details,query,attempts,wait_to_retry,trim_
         try_connection += " host="+details[counter % len(details)].host+" password="+details[counter % len(details)].password
         try_connection += " port="+details[counter % len(details)].port+""
         try:
+            # Try to connect and execute the query
             conn = psycopg2.connect(try_connection)
             cur = conn.cursor()
             cur.execute(query)
+
+            # Get all the results
             rows = cur.fetchall()
+
+            # Close the connection
             cur.close()
+            
+            # If we make it this far we've made a successful connection
             connected = True
             outfile = open(getcwd()+'\\output_files\\Tableau_Server_Usage_Backup_Log.txt','a')
             outfile.write(str(datetime.datetime.now())+'|Successfully connected to: '+details[counter % len(details)].host+'|Attempt ')
@@ -145,12 +176,15 @@ def execute_query_from_postgres_table(details,query,attempts,wait_to_retry,trim_
             outfile.close()
             del outfile
         except:
+            # Unable to connect to the postgres DB
             outfile = open(getcwd()+'\\output_files\\Tableau_Server_Usage_Backup_Log.txt','a')
             outfile.write(str(datetime.datetime.now())+'|Failed to connect to: '+details[counter % len(details)].host+'|Attempt ')
             outfile.write(str(counter)+' of '+str(attempts)+'|Table: '+details[counter % len(details)].table+'|Action: Execute Query\n')
             outfile.close()
             del outfile
             time.sleep(wait_to_retry)
+
+        # If we made a successfull connection we don't need to try again
         if(connected):
             break
 
