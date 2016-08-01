@@ -122,6 +122,7 @@ def get_all_rows_from_postgres_table(details,attempts,wait_to_retry,trim_results
             outfile.close()
             del outfile
             time.sleep(wait_to_retry)
+        # If we successfully connected we don't need to keep trying to connect
         if(connected):
             break
     if(trim_results):
@@ -285,7 +286,8 @@ def run():
     # parameters[9] : Connection attempts
     # parameters[10] : Seconds to wait to retry
     # parameters[11] : Local File Location
-    # parameters[12] : Shared Drive File Location
+    # parameters[12] : Shared Drive File Location | leave blank if you do not want the files copied
+    # parameters[13] : Delimter for the output files
     parameters = []
     readfile = open(getcwd()+'\\input_files\\parameters.txt','r')
     for line in readfile:
@@ -305,7 +307,13 @@ def run():
         close_program = True
         print("{postgres port}Needs to be an integer")
 
-    # Check to make sure all four Tableau Server Worker Names are populated
+    # Check to make sure all four Tableau Server Worker Names are populated.
+    # If they are not, simply add the first one we have to all 4.  (Maybe this is overkill)
+
+    if(len(parameters[4]) < 2 or parameters[4] == '' or type(parameters[4]) == type(None)):
+        close_program = True
+        print("{Tableau Server Worker 1}Needs to be entered")
+
     if(len(parameters[5]) == 0):
         parameters[5] = parameters[4]
     if(len(parameters[6]) == 0):
@@ -336,7 +344,8 @@ def run():
         parameters[11] = parameters[11] + '/'
     if(parameters[12][-1] != '/'):
         parameters[12] = parameters[12] + '/'
-    
+
+    # Catch for any checks that did not pass
     if(close_program):
         print("Please edit paramters.txt to fix the above errors.")
         return "Closed with Errors"
@@ -344,6 +353,9 @@ def run():
     today = date.today()
     yesterday = date.today() - timedelta(1)
     day_before_yesterday = date.today() - timedelta(2)
+    
+    # Attmept to take into account time changes.  This is difficult to test.
+    # I apologize for those who do not use U.S. time.  If you don't use U.S. time change you will need to edit this line
     DST_offset = time.localtime().tm_isdst
 
     values = 'dbname user host password port table'
@@ -361,14 +373,12 @@ def run():
     temp.append(nt(parameters[0],parameters[1],parameters[7],parameters[2],parameters[3],'_users'))
     users_conn = temp
     temp = []
-    #temp.append(nt(parameters[0],parameters[1],'DNE_1',parameters[2],parameters[3],'_views'))
     temp.append(nt(parameters[0],parameters[1],parameters[4],parameters[2],parameters[3],'_views'))
     temp.append(nt(parameters[0],parameters[1],parameters[5],parameters[2],parameters[3],'_views'))
     temp.append(nt(parameters[0],parameters[1],parameters[6],parameters[2],parameters[3],'_views'))
     temp.append(nt(parameters[0],parameters[1],parameters[7],parameters[2],parameters[3],'_views'))
     views_conn = temp
     temp = []
-    #temp.append(nt(parameters[0],parameters[1],'DNE_2',parameters[2],parameters[3],'_workbooks'))
     temp.append(nt(parameters[0],parameters[1],parameters[4],parameters[2],parameters[3],'_workbooks'))
     temp.append(nt(parameters[0],parameters[1],parameters[5],parameters[2],parameters[3],'_workbooks'))
     temp.append(nt(parameters[0],parameters[1],parameters[6],parameters[2],parameters[3],'_workbooks'))
@@ -445,18 +455,17 @@ def run():
     query_extract += " WHERE D4.OWNER_TYPE = 'Datasource') B"
     query_extract += ' ON A."DB Class (Conn WB)" = B."DB Class (Conn DS)")'
 
+    # Get the data
     http_requests_rows = execute_query_from_postgres_table(http_requests_conn,query_http,parameters[9],parameters[10])
     user_logins_rows = execute_query_from_postgres_table(users_conn,query_logins,parameters[9],parameters[10])
-    #http_requests_rows = get_all_rows_from_postgres_table(http_requests_conn)
     users_rows = get_all_rows_from_postgres_table(users_conn,parameters[9],parameters[10])
     views_rows = get_all_rows_from_postgres_table(views_conn,parameters[9],parameters[10])
     workbooks_rows = get_all_rows_from_postgres_table(workbooks_conn,parameters[9],parameters[10])
-    
 
-    #http_requests_header = get_column_names_from_postgres_table(http_requests_conn,'|')
-    users_header = get_column_names_from_postgres_table(users_conn,'|',parameters[9],parameters[10])
-    views_header = get_column_names_from_postgres_table(views_conn,'|',parameters[9],parameters[10])
-    workbooks_header = get_column_names_from_postgres_table(workbooks_conn,'|',parameters[9],parameters[10])
+    # Get headers
+    users_header = get_column_names_from_postgres_table(users_conn,parameters[13],parameters[9],parameters[10])
+    views_header = get_column_names_from_postgres_table(views_conn,parameters[13],parameters[9],parameters[10])
+    workbooks_header = get_column_names_from_postgres_table(workbooks_conn,parameters[13],parameters[9],parameters[10])
     extract_header = 'A_WB_ID|Caption (Conn WB)|Date - Created At (Conn WB)|DB Class (Conn WB)|DB Name (Conn WB)|'
     extract_header += 'Has Extract (Conn WB)|ID - (Conn WB)|Keychain (Conn WB)|LUID (Conn WB)|Name (Conn WB)|'
     extract_header += 'ID - Owner (Conn WB)|Owner Type (Conn WB)|Password (Conn WB)|Port (Conn WB)|'
@@ -478,23 +487,25 @@ def run():
     extract_header += 'ID - Datasource (Extract)|Descriptor (Extract)|ID - (Extract)|Date - Updated At (Extract)|'
     extract_header += 'ID - Workbook (Extract)'
 
-    append_postgres_table(http_requests_rows,'http_requests.txt','|')
-    append_postgres_table(user_logins_rows,'logins.txt','|')
-    #write_postgres_table(http_requests_rows,'http_requests.txt','|',http_requests_header)
-    write_postgres_table(users_rows,'users.txt','|',users_header)
-    write_postgres_table(views_rows,'views.txt','|',views_header)
-    write_postgres_table(workbooks_rows,'workbooks.txt','|',workbooks_header)
-    
+    # Append data to http_requests
+    append_postgres_table(http_requests_rows,'http_requests.txt',parameters[13])
+    append_postgres_table(user_logins_rows,'logins.txt',parameters[13])
+    write_postgres_table(users_rows,'users.txt',parameters[13],users_header)
+    write_postgres_table(views_rows,'views.txt',parameters[13],views_header)
+    write_postgres_table(workbooks_rows,'workbooks.txt',parameters[13],workbooks_header)
 
-    copyfile(parameters[11]+'users.txt',parameters[12]+'users.txt')
-    copyfile(parameters[11]+'http_requests.txt',parameters[12]+'http_requests.txt')
-    copyfile(parameters[11]+'logins.txt',parameters[12]+'logins.txt')
-    copyfile(parameters[11]+'views.txt',parameters[12]+'views.txt')
-    copyfile(parameters[11]+'workbooks.txt',parameters[12]+'workbooks.txt')
+    # If we need to copy files to shared drive do so
+    if(len(parameters[12]) > 1):
+        copyfile(parameters[11]+'users.txt',parameters[12]+'users.txt')
+        copyfile(parameters[11]+'http_requests.txt',parameters[12]+'http_requests.txt')
+        copyfile(parameters[11]+'logins.txt',parameters[12]+'logins.txt')
+        copyfile(parameters[11]+'views.txt',parameters[12]+'views.txt')
+        copyfile(parameters[11]+'workbooks.txt',parameters[12]+'workbooks.txt')
 
     extract_rows = execute_query_from_postgres_table(extract_conn,query_extract,parameters[9],parameters[10],True)
-    write_postgres_table(extract_rows,'extracts.txt','|',extract_header)
-    copyfile(parameters[11]+'extracts.txt',parameters[12]+'extracts.txt')
+    write_postgres_table(extract_rows,'extracts.txt',parameters[13],extract_header)
+    if(len(parameters[12]) > 1):
+        copyfile(parameters[11]+'extracts.txt',parameters[12]+'extracts.txt')
 
     temp = []
     temp.append(nt(parameters[0],parameters[1],parameters[4],parameters[2],parameters[3],'multiple_tables'))
@@ -597,7 +608,10 @@ def run():
     usage_wo_usage_header += 'ID - Licensing Role (WB Owner)|Licensing Role Name (WB Owner)|Date - Login At (WB Owner)|Name (WB Owner)|'
     usage_wo_usage_header += 'ID - Site (WB Owner)|ID - System User (WB Owner)'
     usage_wo_usage_rows = execute_query_from_postgres_table(usage_wo_usage_conn,usage_wo_usage_query,parameters[9],parameters[10],True)
-    write_postgres_table(usage_wo_usage_rows,'Extracts_To_Workbooks.txt','|',usage_wo_usage_header)
-    copyfile(parameters[11]+'Extracts_To_Workbooks.txt',parameters[12]+'Extracts_To_Workbooks.txt')
+    write_postgres_table(usage_wo_usage_rows,'Extracts_To_Workbooks.txt',parameters[13],usage_wo_usage_header)
+    
+    # If we need to copy files to shared drive do so
+    if(len(parameters[12]) > 1):
+        copyfile(parameters[11]+'Extracts_To_Workbooks.txt',parameters[12]+'Extracts_To_Workbooks.txt')
 
 run()

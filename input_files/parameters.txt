@@ -1,6 +1,7 @@
 # If you only have one Primary or one Worker enter it for each entry below
 # File locations need to use / not \
 # Hour difference of 6 is Central US
+# If Shared Drive is left blank it will not copy the files to anywhere
 {postgres database}workgroup
 {postgres username}readonly
 {postgres password}
@@ -14,3 +15,4 @@
 {Seconds to wait to retry}5
 {Local File Location}C:/Python32/output_files/
 {Shared Drive File Location}//SHARED/DRIVE/LOCATION/
+{Delimiter}|
