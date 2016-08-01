@@ -1,4 +1,4 @@
-# If you only have one Primary or one Worker enter it for each entry below
+# If you only have one Primary or one Worker enter it for each entry SERVERNAME
 # File locations need to use / not \
 # Hour difference of 6 is Central US
 # If Shared Drive is left blank it will not copy the files to anywhere
@@ -13,6 +13,6 @@
 {GMT or UTC hour difference}6
 {Connection attempts}10
 {Seconds to wait to retry}5
-{Local File Location}C:/Python32/output_files/
+{Local File Location}C:/LOCATION/OF/Tableau-Server-Usage-Tracking/ouput_files/
 {Shared Drive File Location}//SHARED/DRIVE/LOCATION/
 {Delimiter}|

@@ -1,0 +1,1 @@
+Controller (http)|Action (http)|http_referer (http)|http_user_agent (http)|http_request_uri (http)|remote_ip (http)|Date - Created At (http)|session_id (http)|Date - Completed At (http)|port|ID - User ID (http)|worker (http)|vizql_session (http)|user_ip (http)|Currentsheet (http)|ID - Site ID (http)
