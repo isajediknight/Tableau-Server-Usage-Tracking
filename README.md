@@ -120,7 +120,7 @@ The header for http_requests had to be hard coded since the file is appended.  I
 ## Credits
 Entity Relationship Diagram used from: http://onlinehelp.tableau.com/current/server/en-us/help.htm#data_dictionary.html
 
-Help was requested from Tableau Support: Case 01918537.  I was told that querying the Tableau Server Postgres DB was only permitted but not officially supported and that they would not help tweak this usage tracking query.  Any improvements to this code and query behind it are welcome.
+Help was requested from Tableau Support: Case 01918537.  The repsonse was that querying the Tableau Server Postgres DB was only permitted but not officially supported and that they would not help tweak this usage tracking query.  Any improvements to this code and query behind it are welcome.
 
 ## License
 Copyright (C) 02/29/2016, Luke Brady, Cerner Corporation. This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
