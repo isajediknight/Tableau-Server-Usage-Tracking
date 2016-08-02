@@ -21,7 +21,7 @@ Use the below Images as examples:
 
 Extracts_To_Workbooks.txt joins to http_requests.txt with a left join on: View URL(Views) = Current Sheet (http)
 
-http_requests.txt joins to users.txt with an inner join on: ID - User (http) = ID - (http User)
+http_requests.txt joins to users.txt with an inner join on: ID - User (http) = ID - (http User) .  If you go to createthis Extract and it results in hundreds of thousands of rows you are joining on the wrong ID.
 
 ### Name and Field changes for the Extract
 
